@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+/* Reusable utilities */
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md bg-brand-orange px-5 py-2.5 text-white font-medium shadow hover:opacity-95 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-md border border-brand-orange px-5 py-2.5 text-brand-orange font-medium hover:bg-orange-50 transition disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.card {
+  @apply bg-white shadow-card rounded-xl border border-gray-100;
+}

@@ -7885,7 +7885,7 @@ grave
 ##ize
 chose
 052
-##5000
+##3000
 yard
 ##red
 confront
@@ -14938,7 +14938,7 @@ messenger
 batche
 ##492
 ##0017
-5000
+3000
 separating
 legib
 equip
