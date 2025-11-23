@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import FeatureCard from '../components/FeatureCard'
 import FileUploadZone from '../components/FileUploadZone'
 import SkeletonBlock from '../components/SkeletonBlock'
@@ -10,9 +10,10 @@ import RiskAnomalyScatter from '../components/charts/RiskAnomalyScatter'
 import ContractScoreGauge from '../components/charts/ContractScoreGauge'
 import AdditionalStatsPanel from '../components/AdditionalStatsPanel'
 import AnalysisResultsTable from '../components/AnalysisResultsTable'
-import { api } from '../utils/api'
+// Direct backend calls (no api util) will use fetch to Node backend
 import { exportCsv, exportPdf, printAnalysis } from '../utils/export'
 
+// --- Icons ---
 function IconBar() {return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20V10m6 10V4m6 16v-6" stroke="#FF851B" strokeWidth="2"/></svg>)}
 function IconWarn() {return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86l-8.48 14.7A1 1 0 0 0 2.62 21h18.76a1 1 0 0 0 .86-1.5l-8.48-14.7a1 1 0 0 0-1.74 0z" stroke="#001F3F" strokeWidth="2"/></svg>)}
 function IconGlobe() {return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 0s4 3 4 9-4 9-4 9-4-3-4-9 4-9 4-9z" stroke="#001F3F" strokeWidth="2"/></svg>)}
@@ -26,25 +27,92 @@ export default function Explore() {
   const [error, setError] = useState('')
   const [mode, setMode] = useState('full') // full | risk | anomaly | clause
 
+  // --- Helper: Transform Python Backend Data for React Charts ---
+  const transformData = (backendData) => {
+    if (!backendData) return null
+    const clauses = backendData.clauses || []
+
+    // Normalize clause keys from Python backend (riskBand, anomalyScore, textSnippet)
+    const normalizedClauses = clauses.map(c => ({
+      ...c,
+      risk_band: c.riskBand || c.risk_band,
+      anomaly_score: c.anomalyScore || c.anomaly_score,
+      text: c.textSnippet || c.text || ''
+    }))
+
+    const riskCounts = { 'High Risk': 0, 'Moderate Risk': 0, 'Low Risk': 0 }
+    normalizedClauses.forEach(c => {
+      if (riskCounts[c.risk_band] !== undefined) riskCounts[c.risk_band]++
+    })
+
+    const anomalySeries = normalizedClauses.map((c, i) => ({
+      name: `Clause ${i + 1}`,
+      value: c.anomaly_score,
+      text: (c.text || '').substring(0, 30) + '...'
+    }))
+
+    // Build summary object compatible with existing UI expectations
+    const summary = {
+      composite_score: backendData.compositeScore || backendData.summary?.composite_score || 0,
+      contract_risk_score: backendData.riskSummary?.contractRiskScore || backendData.summary?.contract_risk_score || 0,
+      dispute_likelihood: backendData.riskSummary?.disputeLikelihood || backendData.summary?.dispute_likelihood || 0,
+      structural_completeness: backendData.summary?.structural_completeness || 0.5,
+      compliance_score: backendData.summary?.compliance_score ?? (1 - (backendData.riskSummary?.contractRiskScore || 0))
+    }
+
+    return {
+      ...backendData,
+      clauses: normalizedClauses,
+      riskCategories: riskCounts,
+      anomalySeries,
+      compositeScore: summary.composite_score,
+      contractRiskScore: summary.contract_risk_score,
+      summary
+    }
+  }
+
   async function fetchAnalysis(currentMode) {
+    // Prevent fetching if no text is uploaded yet
+    if (!uploadResult?.text) return;
+
     setLoadingAnalysis(true)
     setError('')
+    
     try {
-      let endpoint
-      switch(currentMode){
-        case 'risk': endpoint = '/api/analyze/risk'; break
-        case 'anomaly': endpoint = '/api/analyze/anomaly'; break
-        case 'clause': endpoint = '/api/analyze/clause'; break
-        default: endpoint = '/api/analyze/mock'
+      // Map UI mode to backend endpoint (Node proxies to Python)
+      let path
+      switch (currentMode) {
+        case 'risk': path = '/api/analyze/risk'; break
+        case 'anomaly': path = '/api/analyze/anomaly'; break
+        case 'clause': path = '/api/analyze/clause'; break
+        case 'full':
+        default: path = '/analyze'; break
       }
-      const { data } = await api.post(endpoint, { text: 'placeholder contract body', language })
-      setAnalysis(data)
+
+      const resp = await fetch(`http://localhost:3000${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: uploadResult.text, language })
+      })
+      if (!resp.ok) throw new Error(`Backend error ${resp.status}`)
+      const data = await resp.json()
+      const processedData = transformData(data)
+      setAnalysis(processedData)
+
     } catch (e) {
-      setError('Failed to run analysis.')
+      console.error(e)
+      setError('Failed to analyze contract. Ensure the backend is running.')
     } finally {
       setLoadingAnalysis(false)
     }
   }
+
+  // Trigger analysis automatically when a file is successfully processed
+  useEffect(() => {
+    if (uploadResult) {
+      fetchAnalysis(mode)
+    }
+  }, [uploadResult]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-8">
@@ -60,7 +128,7 @@ export default function Explore() {
           icon={<IconCheck/>}
           selectable
           selected={mode==='full'}
-          onClick={()=>{ setMode('full'); if(uploadResult) fetchAnalysis('full') }}
+          onClick={()=>{ setMode('full'); }}
         />
         <FeatureCard
           title="Risk Assessment"
@@ -68,7 +136,7 @@ export default function Explore() {
           icon={<IconWarn/>}
           selectable
           selected={mode==='risk'}
-          onClick={()=>{ setMode('risk'); if(uploadResult) fetchAnalysis('risk') }}
+          onClick={()=>{ setMode('risk'); }}
         />
         <FeatureCard
           title="Anomaly Detection"
@@ -76,7 +144,7 @@ export default function Explore() {
           icon={<IconGlobe/>}
           selectable
           selected={mode==='anomaly'}
-          onClick={()=>{ setMode('anomaly'); if(uploadResult) fetchAnalysis('anomaly') }}
+          onClick={()=>{ setMode('anomaly'); }}
         />
         <FeatureCard
           title="Clause Classification"
@@ -84,7 +152,7 @@ export default function Explore() {
           icon={<IconBar/>}
           selectable
           selected={mode==='clause'}
-          onClick={()=>{ setMode('clause'); if(uploadResult) fetchAnalysis('clause') }}
+          onClick={()=>{ setMode('clause'); }}
         />
       </section>
 
@@ -102,9 +170,10 @@ export default function Explore() {
           </div>
           <div className="text-sm text-gray-500">Supported formats: PDF, DOCX, TXT (Max 10MB)</div>
         </div>
-        {/* Mode buttons removed in favor of clickable feature cards */}
-        <FileUploadZone language={language} onUploaded={(r)=>{ setUploadResult(r); fetchAnalysis(mode) }} />
-        {/* Upload JSON intentionally hidden per request */}
+
+        {/* File Upload Zone - Updates 'uploadResult' state on success */}
+        <FileUploadZone language={language} onUploaded={(r)=> setUploadResult(r)} />
+
         {loadingAnalysis && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="card p-4"><SkeletonBlock lines={6} /></div>
@@ -112,63 +181,66 @@ export default function Explore() {
             <div className="card p-4"><SkeletonBlock lines={6} /></div>
           </div>
         )}
-        {error && <div className="text-sm text-red-600">{error}</div>}
+
+        {error && <div className="p-4 bg-red-50 text-red-700 rounded-md border border-red-200">{error}</div>}
+
         {analysis && !loadingAnalysis && (
           <div className="space-y-6 print:space-y-4">
+            
+            {/* --- FULL MODE --- */}
             {mode==='full' && (
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <RiskGaugeChart data={analysis.riskCategories} />
-                <AnomalyAreaChart data={analysis.anomalySeries} />
-                <ClauseBreakdownChart clauses={analysis.clauses} />
-              </div>
+              <>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                  <RiskGaugeChart data={analysis.riskCategories} />
+                  <AnomalyAreaChart data={analysis.anomalySeries} />
+                  <ClauseBreakdownChart clauses={analysis.clauses} />
+                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                  <RiskDistributionBar data={analysis.riskCategories} />
+                  <RiskAnomalyScatter clauses={analysis.clauses} />
+                  <ContractScoreGauge score={analysis.compositeScore} />
+                </div>
+              </>
             )}
-            {mode==='full' && (
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <RiskDistributionBar data={analysis.riskCategories} />
-                <RiskAnomalyScatter clauses={analysis.clauses} />
-                <ContractScoreGauge score={analysis.compositeScore || analysis.riskSummary?.contractRiskScore || 0.5} />
-              </div>
-            )}
+
+            {/* --- RISK MODE --- */}
             {mode==='risk' && (
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <RiskGaugeChart data={analysis.riskCategories} />
                 <RiskDistributionBar data={analysis.riskCategories} />
-                <ContractScoreGauge score={analysis.compositeScore || analysis.contractRiskScore || 0.5} title="Contract Risk" />
+                <ContractScoreGauge score={analysis.contractRiskScore} title="Contract Risk" />
               </div>
             )}
+
+            {/* --- ANOMALY MODE --- */}
             {mode==='anomaly' && (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <AnomalyAreaChart data={analysis.anomalySeries} />
-                <ContractScoreGauge score={analysis.avgAnomaly || 0.5} title="Avg Anomaly" />
+                <ContractScoreGauge score={analysis.summary?.structural_completeness || 0.5} title="Structural Score" />
               </div>
             )}
+
+            {/* --- CLAUSE MODE --- */}
             {mode==='clause' && (
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <ClauseBreakdownChart clauses={analysis.clauses} />
                 <RiskAnomalyScatter clauses={analysis.clauses} />
-                <ContractScoreGauge score={analysis.avgRisk || 0.5} title="Avg Clause Risk" />
+                <ContractScoreGauge score={analysis.summary?.compliance_score || 0.5} title="Compliance Score" />
               </div>
             )}
+
             <AdditionalStatsPanel analysis={analysis} />
+            
             <div className="flex gap-3 flex-wrap">
               <button onClick={()=>exportCsv(analysis)} className="btn-secondary">Export CSV</button>
               <button onClick={()=>exportPdf(analysis)} className="btn-secondary">Export PDF</button>
               <button onClick={printAnalysis} className="btn-secondary">Print View</button>
             </div>
+
             {analysis.clauses && <AnalysisResultsTable clauses={analysis.clauses} />}
           </div>
         )}
       </section>
     </div>
   )
-}
-
-function labelForMode(m){
-  switch(m){
-    case 'full': return 'Full Analysis'
-    case 'risk': return 'Risk Only'
-    case 'anomaly': return 'Anomaly Only'
-    case 'clause': return 'Clause Only'
-    default: return m
-  }
 }
