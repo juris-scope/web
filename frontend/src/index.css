@@ -17,3 +17,10 @@
 .card {
   @apply bg-white shadow-card rounded-xl border border-gray-100;
 }
+
+@media print {
+  header, nav, .no-print { display: none !important; }
+  body { background: #fff !important; }
+  .card { box-shadow: none !important; border: 1px solid #e5e7eb; }
+}
+

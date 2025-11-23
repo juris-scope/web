@@ -45,6 +45,14 @@ npm run dev
 npm start
 ```
 
+### (Optional) Enable Gemini Suggestions
+
+Add your API key to `.env` (do NOT commit real keys):
+```zsh
+echo "GEMINI_API_KEY=your_real_key_here" >> .env
+```
+The backend will automatically enrich clause suggestions using the `gemini-1.5-flash` model. Fallback deterministic suggestions are used if the key is absent or a request fails.
+
 API routes:
 - `POST /api/upload` — file upload (PDF, DOCX, TXT, max 10MB)
 - `GET /api/analytics` — dashboard metrics (placeholder)
@@ -85,6 +93,7 @@ Open http://localhost:5173
 
 - Model folders under `models2/` are not wired yet; backend exposes placeholder endpoints for future integration.
 - Multer stores files under `backend/uploads/` (git-ignored).
+- Gemini integration: clause suggestions enhanced when `GEMINI_API_KEY` is set.
 
 ## Scripts Summary
 

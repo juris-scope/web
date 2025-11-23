@@ -9,6 +9,7 @@ import connectDB from './config/db.js'
 import uploadRoutes from './routes/uploadRoutes.js'
 import analyticsRoutes from './routes/analyticsRoutes.js'
 import analyzeRoutes from './routes/analyzeRoutes.js'
+import profileRoutes from './routes/profileRoutes.js'
 
 dotenv.config()
 
@@ -37,6 +38,7 @@ connectDB(mongoUri)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/analyze', analyzeRoutes)
+app.use('/api/profile', profileRoutes)
 
 app.get('/', (req,res)=>{
   res.json({ name: 'JuriScope API', status: 'ok' })

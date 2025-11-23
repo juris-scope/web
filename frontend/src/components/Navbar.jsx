@@ -12,6 +12,7 @@ export default function Navbar() {
         <nav className="flex items-center gap-6">
           <NavLink to="/" end className={({isActive})=>`text-sm font-medium ${isActive ? 'text-brand-orange' : 'text-gray-600 hover:text-gray-900'}`}>Dashboard</NavLink>
           <NavLink to="/explore" className={({isActive})=>`text-sm font-medium ${isActive ? 'text-brand-orange' : 'text-gray-600 hover:text-gray-900'}`}>Explore</NavLink>
+          <NavLink to="/profile" className={({isActive})=>`text-sm font-medium ${isActive ? 'text-brand-orange' : 'text-gray-600 hover:text-gray-900'}`}>Profile</NavLink>
         </nav>
       </div>
     </header>
