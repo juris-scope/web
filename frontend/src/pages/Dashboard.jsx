@@ -1,404 +1,379 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-// --- 1. ICONS (Lucide/SVG) ---
-const IconUpload = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
-const IconCheck = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
-const IconWarn = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
-const IconGlobe = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
-const IconBar = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>;
+// Icons
+const IconScale = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v18M3 12l9-9 9 9M3 12h18"/><circle cx="12" cy="12" r="3"/></svg>;
+const IconDocument = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
+const IconPen = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>;
+const IconShield = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+const IconBrain = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 3 3.87V15a4 4 0 0 1-3.87 4H8.87A4 4 0 0 1 5 15v-4.13A4 4 0 0 1 8 7V6a4 4 0 0 1 4-4z"/><path d="M12 2v20"/></svg>;
+const IconCheck = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>;
+const IconArrowRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
 
-// --- 2. UI COMPONENTS ---
+// Header removed per request
 
-// Mode Selection Card
-const FeatureCard = ({ title, subtitle, icon, selectable, selected, onClick }) => (
-  <div 
-    onClick={onClick}
-    className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col gap-3 shadow-sm
-      ${selectable && selected 
-        ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-600 ring-offset-2' 
-        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'}
-    `}
-  >
-    <div className="p-2 bg-white rounded-lg w-fit border border-gray-100 shadow-sm">{icon}</div>
-    <div>
-      <h3 className="font-bold text-gray-900">{title}</h3>
-      <p className="text-sm text-gray-500">{subtitle}</p>
-    </div>
-  </div>
-);
-
-// File/Text Input Zone
-const FileUploadZone = ({ language, onUploaded }) => {
-  const [text, setText] = useState("");
-  const [isDragOver, setIsDragOver] = useState(false);
-  
-  const handleAnalyze = () => {
-    // Default mock text if empty, to help user test quickly
-    const payloadText = text || `1. The Tenant shall pay a monthly rent of Rs. 25,000 on or before the 5th of every month.
-
-2. The liability of the provider shall be unlimited in the event of breach, including for gross negligence and willful misconduct.
-
-3. This contract may be terminated by either party without cause by providing 30 days written notice.
-
-4. Confidential Information shall be kept strictly confidential and shall not be disclosed to any third party without prior written consent.`;
-    
-    onUploaded({ text: payloadText, fileName: "manual_input.txt" });
-  };
+// Dashboard Page
+const DashboardPage = ({ onNavigate }) => {
+  const testimonials = [
+    { name: "Priya Sharma", role: "Corporate Lawyer", text: "JuriScope has revolutionized how we review contracts. What used to take hours now takes minutes!" },
+    { name: "Rajesh Kumar", role: "Legal Consultant", text: "The AI-powered risk detection is incredibly accurate. It's caught issues we might have missed." },
+    { name: "Anita Desai", role: "Contract Manager", text: "The drafting assistant is phenomenal. It understands context and produces professional documents." },
+    { name: "Vikram Mehta", role: "Startup Founder", text: "As a non-lawyer, JuriScope helps me understand complex legal documents with ease." }
+  ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <IconUpload /> Input Contract Text
-            </h3>
-            
-            <textarea 
-                className="w-full p-4 border border-gray-300 rounded-lg text-sm mb-4 font-mono bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all" 
-                rows="6" 
-                placeholder="Paste your contract text here..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-            />
-            
-            <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                    Analysis Language: <span className="font-semibold text-blue-700">{language}</span>
-                </div>
-                <button 
-                    onClick={handleAnalyze}
-                    className="px-6 py-2.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-lg shadow-blue-900/20 active:scale-95 transform"
-                >
-                    Analyze Contract
-                </button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-1000"></div>
+          </div>
         </div>
-        {/* Visual Drag Drop Hint */}
-        <div className={`h-2 transition-all ${isDragOver ? 'bg-blue-500' : 'bg-gray-100'}`} />
+
+        <div className="relative z-10 w-full px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+          <div className="text-white space-y-8">
+            <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium border border-white/20">
+              ⚡ Powered by Advanced AI
+            </div>
+            <h1 className="text-5xl lg:text-7xl font-black leading-tight">
+              Legal Analysis
+              <span className="block bg-gradient-to-r from-blue-200 to-indigo-200 bg-clip-text text-transparent">
+                Reimagined
+              </span>
+            </h1>
+            <p className="text-xl text-blue-100 leading-relaxed">
+              Transform complex legal documents into actionable insights with AI-powered contract analysis, risk assessment, and intelligent drafting.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button 
+                onClick={() => onNavigate('analysis')}
+                className="px-8 py-4 bg-white text-blue-900 rounded-xl font-bold text-lg hover:bg-blue-50 transition-all shadow-2xl shadow-blue-900/50 hover:scale-105 transform flex items-center gap-2"
+              >
+                Start Analysis <IconArrowRight />
+              </button>
+              <button 
+                onClick={() => onNavigate('drafting')}
+                className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-lg hover:bg-white/20 transition-all border border-white/20 flex items-center gap-2"
+              >
+                Try Drafting <IconPen />
+              </button>
+            </div>
+          </div>
+
+          {/* Hero Image/Illustration */}
+          <div className="relative">
+            <div className="relative bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 shadow-2xl">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <IconCheck />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold">Contract Analyzed</div>
+                    <div className="text-blue-200 text-sm">98% Confidence Score</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                    <IconShield />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold">3 Risk Factors Found</div>
+                    <div className="text-blue-200 text-sm">Moderate Risk Level</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                    <IconBrain />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold">AI Recommendations</div>
+                    <div className="text-blue-200 text-sm">5 Improvements Suggested</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Floating Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-400 rounded-2xl opacity-50 animate-pulse"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-indigo-400 rounded-full opacity-30 animate-pulse delay-500"></div>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full p-1">
+            <div className="w-1.5 h-3 bg-white rounded-full mx-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - Alternating Layout */}
+      <section className="py-20 px-6">
+        <div className="w-full space-y-32">
+          {/* Feature 1 - Card Left, Text Right */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl transform rotate-3 group-hover:rotate-6 transition-transform"></div>
+              <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg">
+                  <IconShield />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Risk Assessment</h3>
+                <p className="text-gray-600 mb-6">
+                  Our AI analyzes every clause, identifying potential risks and liability concerns with military-grade precision.
+                </p>
+                <ul className="space-y-3">
+                  {['Automated risk scoring', 'Clause-level analysis', 'Liability detection', 'Compliance checks'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-gray-700">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <IconCheck />
+                      </div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="inline-block px-4 py-2 bg-blue-100 text-blue-900 rounded-full text-sm font-bold">
+                RISK INTELLIGENCE
+              </div>
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
+                Protect Your Interests Before You Sign
+              </h2>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Don't let hidden risks catch you off guard. Our AI scans contracts for unfavorable terms, unlimited liabilities, and compliance issues—giving you the confidence to negotiate better deals.
+              </p>
+              <button 
+                onClick={() => onNavigate('analysis')}
+                className="px-6 py-3 bg-blue-900 text-white rounded-xl font-bold hover:bg-blue-800 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform flex items-center gap-2"
+              >
+                Try Risk Analysis <IconArrowRight />
+              </button>
+            </div>
+          </div>
+
+          {/* Feature 2 - Text Left, Card Right */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6 lg:order-1">
+              <div className="inline-block px-4 py-2 bg-indigo-100 text-indigo-900 rounded-full text-sm font-bold">
+                AI DRAFTING
+              </div>
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
+                Draft Professional Documents in Minutes
+              </h2>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Say goodbye to starting from scratch. Our intelligent drafting assistant creates customized legal documents tailored to your specific needs, saving you hours of work.
+              </p>
+              <button 
+                onClick={() => onNavigate('drafting')}
+                className="px-6 py-3 bg-indigo-900 text-white rounded-xl font-bold hover:bg-indigo-800 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform flex items-center gap-2"
+              >
+                Start Drafting <IconPen />
+              </button>
+            </div>
+            <div className="relative group lg:order-2">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl transform -rotate-3 group-hover:-rotate-6 transition-transform"></div>
+              <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-900 to-purple-700 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg">
+                  <IconPen />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Intelligent Document Creation</h3>
+                <p className="text-gray-600 mb-6">
+                  Generate contracts, agreements, and legal documents with AI that understands context and legal language.
+                </p>
+                <ul className="space-y-3">
+                  {['Template customization', 'Multi-language support', 'Clause suggestions', 'Format optimization'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-gray-700">
+                      <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <IconCheck />
+                      </div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 3 - Card Left, Text Right */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-teal-600 rounded-3xl transform rotate-3 group-hover:rotate-6 transition-transform"></div>
+              <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-700 to-teal-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg">
+                  <IconBrain />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Anomaly Detection Engine</h3>
+                <p className="text-gray-600 mb-6">
+                  Our advanced ML algorithms detect unusual patterns and deviations that human reviewers might miss.
+                </p>
+                <ul className="space-y-3">
+                  {['Pattern recognition', 'Deviation alerts', 'Contextual analysis', 'Smart highlighting'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-gray-700">
+                      <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <IconCheck />
+                      </div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="inline-block px-4 py-2 bg-green-100 text-green-900 rounded-full text-sm font-bold">
+                ANOMALY DETECTION
+              </div>
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
+                Catch What Others Miss
+              </h2>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Unusual clauses hiding in plain sight? Our anomaly detection spots inconsistencies, outliers, and suspicious terms that don't match industry standards—protecting you from hidden traps.
+              </p>
+              <button 
+                onClick={() => onNavigate('analysis')}
+                className="px-6 py-3 bg-green-700 text-white rounded-xl font-bold hover:bg-green-600 transition-all shadow-lg hover:shadow-xl hover:scale-105 transform flex items-center gap-2"
+              >
+                Explore Detection <IconArrowRight />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About Us Section */}
+      <section className="py-20 px-6 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white">
+        <div className="w-full">
+          <div className="text-center mb-16">
+            <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold mb-4">
+              ABOUT JURISCOPE
+            </div>
+            <h2 className="text-4xl lg:text-5xl font-black mb-6">Trusted by Legal Professionals Worldwide</h2>
+            <p className="text-xl text-blue-200 max-w-3xl mx-auto">
+              We're on a mission to make legal technology accessible, intelligent, and indispensable for everyone who works with contracts.
+            </p>
+          </div>
+
+          {/* Testimonials Carousel */}
+          <div className="relative overflow-hidden">
+            <div className="flex gap-6 animate-scroll-continuous pb-8">
+              {[...testimonials, ...testimonials].map((testimonial, i) => (
+                <div key={i} className="flex-shrink-0 w-80 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, j) => (
+                      <div key={j} className="w-5 h-5 text-yellow-400">⭐</div>
+                    ))}
+                  </div>
+                  <p className="text-blue-100 mb-4 italic">"{testimonial.text}"</p>
+                  <div>
+                    <div className="font-bold">{testimonial.name}</div>
+                    <div className="text-sm text-blue-300">{testimonial.role}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
+            {[
+              { value: '50K+', label: 'Contracts Analyzed' },
+              { value: '98%', label: 'Accuracy Rate' },
+              { value: '10K+', label: 'Active Users' },
+              { value: '24/7', label: 'AI Availability' }
+            ].map((stat, i) => (
+              <div key={i} className="text-center">
+                <div className="text-5xl font-black bg-gradient-to-r from-blue-200 to-indigo-200 bg-clip-text text-transparent mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-blue-300">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-6">
+        <div className="w-full text-center bg-gradient-to-br from-blue-900 to-indigo-900 rounded-3xl p-12 text-white shadow-2xl">
+          <h2 className="text-4xl font-black mb-6">Ready to Transform Your Legal Workflow?</h2>
+          <p className="text-xl text-blue-200 mb-8">
+            Join thousands of legal professionals who trust JuriScope for smarter, faster contract analysis.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <button 
+              onClick={() => onNavigate('analysis')}
+              className="px-8 py-4 bg-white text-blue-900 rounded-xl font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:scale-105 transform"
+            >
+              Get Started Free
+            </button>
+            <button 
+              onClick={() => onNavigate('about')}
+              className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-lg hover:bg-white/20 transition-all border border-white/20"
+            >
+              Learn More
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <style>{`
+        @keyframes scroll-continuous {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-scroll-continuous {
+          animation: scroll-continuous 30s linear infinite;
+        }
+        .animate-scroll-continuous:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 };
 
-const SkeletonLoader = () => (
-  <div className="animate-pulse space-y-4 p-4 border rounded-lg bg-white">
-    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-    <div className="h-32 bg-gray-100 rounded w-full"></div>
-    <div className="space-y-2">
-        <div className="h-3 bg-gray-200 rounded w-full"></div>
-        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-    </div>
-  </div>
-);
-
-// --- 3. CHARTS (CSS-ONLY implementation to avoid dependencies) ---
-
-const RiskGauge = ({ data }) => {
-    const total = (data?.['Low Risk'] || 0) + (data?.['Moderate Risk'] || 0) + (data?.['High Risk'] || 0) || 1;
-    const lowH = Math.max(((data?.['Low Risk'] || 0) / total) * 100, 5);
-    const modH = Math.max(((data?.['Moderate Risk'] || 0) / total) * 100, 5);
-    const highH = Math.max(((data?.['High Risk'] || 0) / total) * 100, 5);
-
-    return (
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
-            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Risk Composition</h4>
-            <div className="flex items-end justify-center gap-4 flex-1 h-32 pb-4 border-b border-gray-100">
-                <div className="w-16 bg-green-500 rounded-t-lg relative group transition-all duration-700 hover:opacity-90" style={{height: `${lowH}%`}}>
-                   <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-green-700">{data?.['Low Risk'] || 0}</span>
-                </div>
-                <div className="w-16 bg-yellow-400 rounded-t-lg relative group transition-all duration-700 hover:opacity-90" style={{height: `${modH}%`}}>
-                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-yellow-700">{data?.['Moderate Risk'] || 0}</span>
-                </div>
-                <div className="w-16 bg-red-500 rounded-t-lg relative group transition-all duration-700 hover:opacity-90" style={{height: `${highH}%`}}>
-                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-red-700">{data?.['High Risk'] || 0}</span>
-                </div>
-            </div>
-            <div className="flex justify-between text-xs font-medium text-gray-400 mt-3 px-4">
-                <span>Safe</span><span>Moderate</span><span>Critical</span>
-            </div>
-        </div>
-    );
-}
-
-const AnomalyChart = ({ data }) => (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm h-full flex flex-col">
-        <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Anomaly Detection</h4>
-        <div className="flex-1 flex items-end gap-1 h-32 w-full overflow-hidden">
-            {data && data.map((d, i) => (
-                <div 
-                    key={i} 
-                    className="flex-1 bg-indigo-200 hover:bg-indigo-500 rounded-t transition-all duration-300 relative group cursor-pointer" 
-                    style={{height: `${Math.max(d.value * 100, 10)}%`}}
-                >
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs p-2 rounded shadow-lg w-48 z-10 text-center pointer-events-none">
-                        <div className="font-bold">Score: {d.value.toFixed(2)}</div>
-                        <div className="text-gray-300 text-[10px] truncate">{d.text}</div>
-                    </div>
-                </div>
-            ))}
-        </div>
-        <div className="text-center text-xs text-gray-400 mt-3">Clause Sequence (Start → End)</div>
-    </div>
-);
-
-const ScoreCard = ({ title, score, type = 'default' }) => {
-    let colorClass = "text-blue-600";
-    if (type === 'risk' && score > 0.7) colorClass = "text-red-600";
-    if (type === 'risk' && score < 0.3) colorClass = "text-green-600";
-
-    return (
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{title}</h4>
-            <div className={`text-4xl font-black font-mono my-2 ${colorClass}`}>
-                {(score * 100).toFixed(0)}
-            </div>
-            <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div className={`h-full ${type === 'risk' ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${score * 100}%`}}></div>
-            </div>
-        </div>
-    );
-};
-
-// --- MODIFIED CLAUSE TABLE ---
-const ClauseTable = ({ clauses }) => (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
-                    <tr>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">ID</th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs w-1/3">Clause Text</th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Type</th>
-                        <th className="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs">Risk Level</th>
-                        {/* Added Anomaly Score Header */}
-                        <th className="px-6 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider text-xs w-1/4">Anomaly Score</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                    {clauses.map((c, i) => (
-                        <tr key={i} className="hover:bg-blue-50/50 transition-colors">
-                            <td className="px-6 py-4 text-gray-500 font-mono text-xs">#{i+1}</td>
-                            <td className="px-6 py-4 text-gray-800">
-                                <div className="line-clamp-3 hover:line-clamp-none transition-all cursor-text">{c.text}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                    {c.clause_type}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                                    ${c.risk_band === 'High Risk' ? 'bg-red-50 text-red-700 border-red-200' : 
-                                      c.risk_band === 'Moderate Risk' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
-                                      'bg-green-50 text-green-700 border-green-200'}`}>
-                                    {c.risk_band}
-                                </span>
-                            </td>
-                            {/* Added Anomaly Score Cell */}
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden min-w-[60px]">
-                                        <div 
-                                            className={`h-full ${c.anomaly_score > 0.7 ? 'bg-red-500' : c.anomaly_score > 0.4 ? 'bg-yellow-400' : 'bg-green-500'}`} 
-                                            style={{width: `${(c.anomaly_score || 0) * 100}%`}}
-                                        ></div>
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-gray-600">
-                                        {(c.anomaly_score || 0).toFixed(2)}
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </div>
-);
-
-
-// --- 4. MAIN APP COMPONENT ---
-
+// Main App Component
 export default function App() {
-  const [language, setLanguage] = useState('English');
-  const [inputData, setInputData] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [mode, setMode] = useState('full');
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
-  // --- DATA TRANSFORMATION ---
-  const transformData = (backendData) => {
-    if (!backendData || !backendData.clauses) return null;
-
-    const riskCounts = { "High Risk": 0, "Moderate Risk": 0, "Low Risk": 0 };
-    backendData.clauses.forEach(c => {
-      const band = c.risk_band || "Low Risk";
-      riskCounts[band] = (riskCounts[band] || 0) + 1;
-    });
-
-    const anomalySeries = backendData.clauses.map((c, i) => ({
-      id: i,
-      value: c.anomaly_score,
-      text: c.text
-    }));
-
-    return {
-      raw: backendData,
-      riskCategories: riskCounts, 
-      anomalySeries: anomalySeries, 
-      compositeScore: backendData.summary?.composite_score || 0,
-      contractRiskScore: backendData.summary?.contract_risk_score || 0
-    };
-  };
-
-  // --- API CALL ---
-  const fetchAnalysis = async () => {
-    if (!inputData?.text) return;
-
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Direct call to Node.js Backend on port 3000
-      const endpoint = 'http://localhost:3000/analyze'; 
-
-      const payload = {
-        text: inputData.text,
-        language: language
-      };
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `Server Error: ${response.status}`);
-      }
-      
-      setAnalysis(transformData(data));
-
-    } catch (e) {
-      console.error("Analysis Failed:", e);
-      setError(`Connection Error: ${e.message}. Ensure Node.js is running on port 3000.`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Auto-trigger when file is "uploaded"
-  useEffect(() => {
-    if (inputData) fetchAnalysis();
-  }, [inputData]); // eslint-disable-line react-hooks/exhaustive-deps
-
-
-  // --- RENDER ---
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
-      
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-900/20">
-                    AI
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-bold text-gray-900 leading-tight">LegalLens</h1>
-                    <p className="text-xs text-gray-500 font-medium">Intelligent Contract Analysis</p>
-                  </div>
-              </div>
-              <div className="flex items-center gap-4">
-                 <select 
-                    value={language} 
-                    onChange={(e)=>setLanguage(e.target.value)} 
-                    className="bg-gray-100 border-none text-sm font-medium rounded-md px-3 py-1.5 focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-200 transition-colors"
-                 >
-                    <option>English</option>
-                    <option>Hindi</option>
-                    <option>Spanish</option>
-                 </select>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      {currentPage === 'dashboard' && <DashboardPage onNavigate={setCurrentPage} />}
+      {currentPage === 'analysis' && (
+        <div className="max-w-screen mx-auto px-6 py-12">
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Analysis Page</h2>
+            <p className="text-gray-600">This is your existing analysis page. Replace this section with your analysis component.</p>
           </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        
-        {/* 1. Feature Selection */}
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <FeatureCard title="Full Analysis" subtitle="Combined Insights" icon={<IconCheck/>} selectable selected={mode==='full'} onClick={()=>setMode('full')} />
-            <FeatureCard title="Risk Assessment" subtitle="Automated Scoring" icon={<IconWarn/>} selectable selected={mode==='risk'} onClick={()=>setMode('risk')} />
-            <FeatureCard title="Anomaly Detection" subtitle="Pattern Deviation" icon={<IconGlobe/>} selectable selected={mode==='anomaly'} onClick={()=>setMode('anomaly')} />
-            <FeatureCard title="Clause AI" subtitle="Extraction & Types" icon={<IconBar/>} selectable selected={mode==='clause'} onClick={()=>setMode('clause')} />
-        </section>
-
-        {/* 2. Input Zone */}
-        <FileUploadZone language={language} onUploaded={setInputData} />
-
-        {/* 3. Loading State */}
-        {loading && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <SkeletonLoader />
-                <SkeletonLoader />
-                <SkeletonLoader />
-            </div>
-        )}
-
-        {/* 4. Error State */}
-        {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-red-800">
-                <IconWarn />
-                <span className="font-medium">{error}</span>
-            </div>
-        )}
-
-        {/* 5. Results Dashboard */}
-        {analysis && !loading && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                
-                {/* Top Metrics Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <ScoreCard title="Composite Health" score={analysis.compositeScore} />
-                    <ScoreCard title="Risk Factor" score={analysis.contractRiskScore} type="risk" />
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center items-center">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Clauses</div>
-                        <div className="text-4xl font-black text-gray-800">{analysis.raw.clauses.length}</div>
-                        <div className="text-xs text-gray-500">Total Analyzed</div>
-                    </div>
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-center items-center">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">High Risk</div>
-                        <div className="text-4xl font-black text-red-600">{analysis.riskCategories["High Risk"] || 0}</div>
-                        <div className="text-xs text-gray-500">Critical Issues</div>
-                    </div>
-                </div>
-
-                {/* Charts Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-80">
-                    <RiskGauge data={analysis.riskCategories} />
-                    <AnomalyChart data={analysis.anomalySeries} />
-                </div>
-
-                {/* Summary Stats */}
-                <div className="bg-blue-900 rounded-xl p-6 text-white shadow-lg shadow-blue-900/20">
-                    <h3 className="text-sm font-bold uppercase tracking-wider opacity-70 mb-4">Detailed Metrics</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {Object.entries(analysis.raw.summary || {}).map(([k, v]) => (
-                            <div key={k}>
-                                <div className="text-xs opacity-60 mb-1 capitalize">{k.replace(/_/g, ' ')}</div>
-                                <div className="text-xl font-mono font-bold">{typeof v === 'number' ? v.toFixed(2) : v}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Detailed Table */}
-                <ClauseTable clauses={analysis.raw.clauses} />
-
-            </div>
-        )}
-      </main>
+        </div>
+      )}
+      {currentPage === 'drafting' && (
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Drafting Page</h2>
+            <p className="text-gray-600">Coming soon...</p>
+          </div>
+        </div>
+      )}
+      {currentPage === 'previous' && (
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Previous Drafts</h2>
+            <p className="text-gray-600">Coming soon...</p>
+          </div>
+        </div>
+      )}
+      {currentPage === 'about' && (
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">About Us</h2>
+            <p className="text-gray-600">Coming soon...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
