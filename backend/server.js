@@ -11,7 +11,8 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || '*'}));
+// This explicitly allows all domains for CORS
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 // Static uploads for avatars
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
