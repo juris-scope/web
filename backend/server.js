@@ -1,7 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import connectDB from './config/db.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 
@@ -10,6 +13,13 @@ const port = 3000;
 
 app.use(cors());
 app.use(express.json());
+// Static uploads for avatars
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+
+// Optional DB connection if MONGO_URI provided
+if (process.env.MONGO_URI) {
+    connectDB(process.env.MONGO_URI)
+}
 
 // --- 1. API KEY LOAD BALANCER ---
 // We store the keys in an array and rotate through them
@@ -305,6 +315,9 @@ app.post('/analyze-document', async (req, res) => {
         res.status(500).json({ error: 'Document analysis failed.' });
     }
 });
+
+// --- User Profile & Settings Routes ---
+app.use('/api/user', userRoutes);
 
 app.listen(port, () => {
     console.log(`Legal Drafting Backend running on http://localhost:${port}`);

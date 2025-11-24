@@ -1,9 +1,10 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Explore from './pages/Explore'
-import Profile from './pages/Profile'
+import About from './pages/About'
 import Navbar from './components/Navbar'
 import Drafting from './pages/Drafting'
+import Profile from './pages/Profile'
 
 export default function App() {
   return (
@@ -13,7 +14,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/explore" element={<Explore />} />
-          <Route path="/about-us" element={<Profile />} />
+          <Route path="/about-us" element={<About />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/drafting" element={<Drafting />} />
           <Route path="*" element={<div className="py-16 text-center">Page not found. <Link className="text-brand-orange" to="/">Go home</Link></div>} />
         </Routes>

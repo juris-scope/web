@@ -89,6 +89,27 @@ Open http://localhost:5173
 - Components: Navbar, Button, DashboardCard, FeatureCard, FileUploadZone
 - Responsive, with loading and error states
 
+## Profile/Settings Page
+
+- Route: `/profile`
+- Tabs: Personal Info, Security & Privacy, Preferences, Usage Statistics
+- Charts: Recharts (already included)
+- Avatar uploads saved under `backend/uploads/` and served from `/uploads/*` by backend
+
+Backend endpoints (demo, no auth):
+- GET `/api/user/profile` | PUT `/api/user/profile` | POST `/api/user/avatar`
+- PUT `/api/user/password` | POST `/api/user/2fa/enable` | `/api/user/2fa/disable`
+- GET `/api/user/sessions` | DELETE `/api/user/sessions/:id` | POST `/api/user/sessions/signout-others`
+- PUT `/api/user/preferences` | GET `/api/user/statistics` | GET `/api/user/export-data`
+- DELETE `/api/user/account`
+
+Run locally:
+```zsh
+cd backend && npm install && npm run dev
+# in another terminal
+cd frontend && npm install && npm run dev
+```
+
 ## Notes
 
 - Model folders under `models2/` are not wired yet; backend exposes placeholder endpoints for future integration.

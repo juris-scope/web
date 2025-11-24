@@ -20,6 +20,8 @@ const IconClose = () => (
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const user = { name: 'Venisha kalola', email: 'john.doe@lawfirm.com', avatar: null }
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).slice(0,2).join('') : 'JS'
 
   return (
     <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -101,6 +103,13 @@ export default function Navbar() {
             </NavLink>
           </nav>
 
+          {/* Right-side user avatar */}
+          <Link to="/profile" className="hidden md:flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#001F3F] to-[#FF851B] text-white flex items-center justify-center font-bold shadow-sm hover:shadow-md transition-all">
+              {initials}
+            </div>
+          </Link>
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -170,6 +179,20 @@ export default function Navbar() {
                 `}
               >
                 About Us
+              </NavLink>
+
+              <NavLink 
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className={({isActive}) => `
+                  block px-4 py-3 rounded-xl text-sm font-bold transition-all
+                  ${isActive 
+                    ? 'text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg shadow-orange-500/20' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                  }
+                `}
+              >
+                Profile
               </NavLink>
             </nav>
           </div>
