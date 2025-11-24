@@ -1,22 +1,66 @@
-# JuriScope — MERN Stack (Vite + Express + MongoDB)
+# JuriScope — AI-Powered Contract Intelligence (MERN: Vite + Express + MongoDB)
 
-JuriScope is an AI-powered contract analysis platform scaffolded with a clean, professional legal-tech UI and a ready-to-extend backend. This repo contains a full MERN setup with Vite (React) on the frontend and Express/MongoDB on the backend.
+JuriScope is an extensible legal-tech platform for ingesting contracts, extracting clause/risk signals, benchmarking anomalies, and surfacing actionable insights via a polished enterprise UI. The current iteration provides a production-ready MERN scaffold with clear extension points for custom NLP / ML models.
 
-## Structure
+## Why JuriScope?
+
+Contracts are dense, heterogeneous, and risk-laden. JuriScope aims to accelerate review by:
+1. Centralizing uploads & parsing (DOCX / PDF / TXT) into a structured representation.
+2. Highlighting clauses, risk categories, and transaction anomalies (model hooks ready, placeholders active).
+3. Providing dashboard drill-down metrics & per-file analysis context for faster triage.
+4. Offering an opinionated UI/UX tuned for legal workflows (clarity > decoration, focus states, skeleton loading, descriptive empty states).
+5. Enabling optional LLM augmentation (Gemini) for clause improvement suggestions and redline rationale.
+
+## Current Feature Set
+
+### Dashboards & Visualization
+- Overview dashboard: KPI cards + future analytic aggregates (`/api/analytics`).
+- Chart components (Recharts) for clause mix, risk distribution, anomaly trends, gauge scoring.
+- Additional stats panel & skeleton loading states for perceived performance.
+
+### Profile & User Workspace 
+- Multi-tab profile: Personal Info, Security & Privacy, Preferences, Usage Statistics.
+- Session management placeholders (enumeration, forced sign-out patterns prepared).
+- Password strength meter + security settings scaffolding for future auth integration.
+- Avatar upload & serving via static Express route (`/uploads/*`).
+
+### UI / UX Design
+- Tailwind CSS design system with consistent semantic color tokens (Deep Navy `#001F3F`, Burnt Orange `#FF851B`).
+- Reusable primitives: `Button`, `DashboardCard`, `FeatureCard`, `FileUploadZone`, `Navbar`.
+- Accessibility-minded states: focus rings, skeleton loaders, error boundaries (ready for expansion).
+- Responsive layout (mobile → widescreen) validated by component breakpoints.
+
+### AI & Augmentation
+- Optional Gemini integration (`gemini-1.5-flash`) for clause improvement suggestions.
+- Fallback deterministic suggestions when API unavailable → deterministic pipeline preserves reproducibility.
+- Clear abstraction layer to swap / stack models (future: risk scoring, summarization, negotiation playbooks).
+
+### Extensibility Hooks
+- `models2/` directory seeds tokenizer/config artifacts for future custom-trained transformers.
+- Service layer pattern encourages adding `services/<model>.js` with shared error normalization.
+- Route modularity: isolated routers (`analyzeRoutes`, `analyticsRoutes`, `uploadRoutes`, `user.routes.js`) for incremental horizontally-scalable microservice extraction.
+- Frontend `utils/api.js` centralizes request logic (easy injection of auth headers / tracing / retries).
+
+### Engineering & DX
+- Vite frontend: lightning-fast HMR for React dev.
+- Nodemon backend: rapid iteration on API/service changes.
+- Structured environment config with `.env.example` to reduce onboarding friction.
+- Clear separation of presentation (components) vs. data orchestration (pages + utils).
+
+## High-Level Architecture
 
 ```
-frontend/
-	src/
-		assets/
-		components/
-		pages/
-		utils/
-backend/
-	config/
-	controllers/
-	routes/
-	uploads/
-	.env.example
+┌──────────────┐      Upload / Analyze      ┌──────────────┐
+│  Frontend    │  ───────────────────────▶  │   Backend    │
+│  (Vite/React)│                           │ (Express/API) │
+│  UI Layer    │ ◀───────────────────────  │ Models/Services│
+└─────┬────────┘   Metrics / Profile        └──────┬───────┘
+      │                                           │
+      ▼                                           ▼
+  Components & State                         MongoDB Persistence
+      │                                           │
+      ▼                                           ▼
+   Recharts / Tailwind                     Future ML Model Layer (models2/)
 ```
 
 ## Requirements
@@ -24,100 +68,84 @@ backend/
 - Node.js 18+
 - MongoDB (local or remote)
 
-## Setup — Backend
+## Quick Start
 
-1) Install dependencies
 ```zsh
+# Backend
 cd backend
 npm install
-```
+cp .env.example .env   # set MONGO_URI, CORS_ORIGIN, optional GEMINI_API_KEY
+npm run dev             # starts on :3000
 
-2) Configure environment
-```zsh
-cp .env.example .env
-# edit .env if needed (MONGO_URI, CORS_ORIGIN)
-```
-
-3) Start the server (port 3000)
-```zsh
-npm run dev
-# or
-npm start
-```
-
-### (Optional) Enable Gemini Suggestions
-
-Add your API key to `.env` (do NOT commit real keys):
-```zsh
-echo "GEMINI_API_KEY=your_real_key_here" >> .env
-```
-The backend will automatically enrich clause suggestions using the `gemini-1.5-flash` model. Fallback deterministic suggestions are used if the key is absent or a request fails.
-
-API routes:
-- `POST /api/upload` — file upload (PDF, DOCX, TXT, max 10MB)
-- `GET /api/analytics` — dashboard metrics (placeholder)
-- `POST /api/analyze/clause|risk|anomaly` — placeholder endpoints for future model integration
-
-## Setup — Frontend
-
-1) Install dependencies
-```zsh
-cd ../frontend
+# Frontend (new terminal)
+cd frontend
 npm install
-```
-
-2) (Optional) Create `.env` and set API URL
-```zsh
 echo "VITE_API_URL=http://localhost:3000" > .env
+npm run dev             # starts on :5173
 ```
-
-3) Run the dev server (port 5173)
-```zsh
-npm run dev
-```
-
 Open http://localhost:5173
 
-## Frontend Highlights
+## Backend Setup (Detailed)
+1. Install dependencies: `npm install`.
+2. Duplicate env: `cp .env.example .env` then edit.
+3. Run dev: `npm run dev` (nodemon) or production: `npm start`.
+4. Optional Gemini: `echo "GEMINI_API_KEY=your_real_key_here" >> .env`.
 
-- Light theme, enterprise-ready aesthetic
-- Brand colors: Deep Navy `#001F3F`, Burnt Orange `#FF851B`
-- Tailwind CSS
-- Pages & routes:
-	- `/` Dashboard with metrics and feature highlights
-	- `/explore` Analysis page with language selector and drag-and-drop upload
-- Components: Navbar, Button, DashboardCard, FeatureCard, FileUploadZone
-- Responsive, with loading and error states
+Primary API routes:
+- `POST /api/upload` — ingest contract file.
+- `POST /api/analyze/clause|risk|anomaly` — ML hook placeholders.
+- `GET /api/analytics` — dashboard metrics (extendable).
+- User demo endpoints: profile, avatar, preferences, sessions, statistics, export.
 
-## Profile/Settings Page
+## Frontend Setup (Detailed)
+1. Install deps: `npm install`.
+2. Configure API origin: `.env` with `VITE_API_URL`.
+3. Run dev: `npm run dev`.
 
-- Route: `/profile`
-- Tabs: Personal Info, Security & Privacy, Preferences, Usage Statistics
-- Charts: Recharts (already included)
-- Avatar uploads saved under `backend/uploads/` and served from `/uploads/*` by backend
+Key Routes:
+- `/` Dashboard (cards, charts, highlights).
+- `/explore` Upload + analysis workspace.
+- `/profile` Settings & usage stats.
+- Future: drafting assistant, negotiation diffing.
 
-Backend endpoints (demo, no auth):
-- GET `/api/user/profile` | PUT `/api/user/profile` | POST `/api/user/avatar`
-- PUT `/api/user/password` | POST `/api/user/2fa/enable` | `/api/user/2fa/disable`
-- GET `/api/user/sessions` | DELETE `/api/user/sessions/:id` | POST `/api/user/sessions/signout-others`
-- PUT `/api/user/preferences` | GET `/api/user/statistics` | GET `/api/user/export-data`
-- DELETE `/api/user/account`
+## Data & Models
+- MongoDB schemas define contract, clause, risk, report objects (see `backend/models/*`).
+- `models2/` holds tokenizer + config artifacts for integrating transformer-based pipelines later.
+- Extend by adding processing phase post-upload before persisting analysis report.
 
-Run locally:
-```zsh
-cd backend && npm install && npm run dev
-# in another terminal
-cd frontend && npm install && npm run dev
-```
+## AI Integration Pattern
+1. Receive raw text / parsed sections.
+2. Apply deterministic preprocessing (tokenization, segmentation).
+3. Call external model (Gemini or custom) with safety/timeouts.
+4. Normalize responses into stable shape for UI consumption.
+5. Cache / store summary objects for analytics aggregation.
 
-## Notes
+## Roadmap (Indicative)
+- [ ] Wire real clause/risk/anomaly models using `models2/` artifacts.
+- [ ] Add authentication + RBAC for multi-user tenancy.
+- [ ] Implement contract diffing & version lineage.
+- [ ] Add bulk export (CSV/JSON) and redline generator.
+- [ ] Integrate policy rules engine for auto-flag thresholds.
+- [ ] Observability: structured logging + tracing (OpenTelemetry).
+- [ ] Optional vector search against precedent clauses.
 
-- Model folders under `models2/` are not wired yet; backend exposes placeholder endpoints for future integration.
-- Multer stores files under `backend/uploads/` (git-ignored).
-- Gemini integration: clause suggestions enhanced when `GEMINI_API_KEY` is set.
+## Contributing
+1. Fork & branch naming: `feature/<short-desc>`.
+2. Keep PRs atomic (UI vs. backend separation preferred).
+3. Update README or in-code docs when adding new model/service.
 
 ## Scripts Summary
+- Backend: `npm run dev` (nodemon), `npm start` (prod), `npm run seed` (if added later).
+- Frontend: `npm run dev`, `npm run build`, `npm run preview`.
 
-- Backend: `npm run dev` (nodemon) or `npm start`
-- Frontend: `npm run dev`, `npm run build`, `npm run preview`
+## Notes
+- Multer stores uploads under `backend/uploads/` (git-ignored).
+- Gemini suggestions degrade gracefully when key absent.
+- Placeholder analyze endpoints intentionally simple → focus on contract ingestion + future model swap.
+
+## License / Usage
+No explicit license added yet. Avoid committing proprietary contracts or real API keys. Add a LICENSE file before external distribution.
+
+---
+Questions / ideas? Open an issue or propose a roadmap item. Happy building.
 
