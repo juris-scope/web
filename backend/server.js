@@ -9,9 +9,9 @@ import userRoutes from './routes/user.routes.js';
 dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || '*'}));
 app.use(express.json());
 // Static uploads for avatars
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
@@ -29,7 +29,7 @@ const apiKeys = [
     process.env.GEMINI_API_KEY3
 ].filter(key => key); // Filter out undefined keys
 
-console.log(apiKeys);
+console.log(`Gemini keys loaded: ${apiKeys.length}`);
 if (apiKeys.length === 0) {
     console.error("Error: No API Keys found in .env file");
     process.exit(1);
@@ -42,7 +42,8 @@ const getNextGeminiClient = () => {
     const key = apiKeys[keyIndex];
     // Move index to next, loop back to 0 if at end
     keyIndex = (keyIndex + 1) % apiKeys.length;
-    console.log(`Using API Key Index: ${keyIndex} (Load Balancing)`);
+    // Masked log of key rotation (no key value)
+    console.log(`Using Gemini key #${keyIndex + 1}/${apiKeys.length}`);
     return new GoogleGenerativeAI(key);
 };
 
