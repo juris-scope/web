@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
+console.log('env', import.meta.env);
+console.log('VITE_API_URL', import.meta.env.VITE_API_URL);
+
+// const api = 'http://localhost:3000'
+const api = 'https://web-v2nb.onrender.com'
+
 // --- ICONS ---
 const IconPlus = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 const IconCheck = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><polyline points="20 6 9 17 4 12"></polyline></svg>;
@@ -50,7 +56,7 @@ const Drafting = () => {
   const runInitialAnalysis = async (textBlocks) => {
     setLoadingAnalysis(true);
     try {
-        const res = await fetch('http://localhost:3000/analyze-document', {
+        const res = await fetch(`${api}/analyze-document`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ blocks: textBlocks })
@@ -72,7 +78,7 @@ const Drafting = () => {
     setImprovementResult(null);
 
     try {
-      const res = await fetch('http://localhost:3000/improve-clause', {
+      const res = await fetch(`${api}/improve-clause`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: currentText })
@@ -103,7 +109,7 @@ const Drafting = () => {
     setPrompt(textToDraft); 
 
     try {
-      const res = await fetch('http://localhost:3000/generate-clause', {
+      const res = await fetch(`${api}/generate-clause`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: textToDraft })
@@ -419,7 +425,7 @@ const Drafting = () => {
           </div>
           
           <div className="flex justify-between items-center pt-1">
-             <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Powered by JuriScope AI</div>
+             <div className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Powered by JuriScope</div>
              <button onClick={exportPdf} disabled={!docBlocks.length} className="text-xs font-semibold text-gray-500 hover:text-indigo-600 underline disabled:opacity-50">Print / Save PDF</button>
           </div>
         </div>
